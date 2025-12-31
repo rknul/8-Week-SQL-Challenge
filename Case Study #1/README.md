@@ -243,3 +243,140 @@ Final Result
 | A           | 2021-01-07 | 2          | 2021-01-07 |
 | B           | 2021-01-09 | 1          | 2021-01-11 |
 
+---
+
+## ⭐ Question 7 - Which item was purchased just before the customer became a member?
+
+```
+
+WITH cte_table AS (
+  SELECT sales.customer_id, members.join_date, sales.product_id, sales.order_date, DENSE_RANK() OVER(PARTITION BY sales.customer_id ORDER BY sales.order_date DESC) as ranking
+FROM sales
+INNER JOIN members ON sales.customer_id = members.customer_id AND sales.order_date < members.join_date
+ORDER BY sales.customer_id
+)
+SELECT * FROM cte_table
+WHERE ranking = 1
+ORDER BY customer_id ASC
+
+```
+
+Explanation
+- Similar to Question 6, except we modify the JOIN in the CTE to have order dates < than member's join date.
+- Also, since we're finding the order the customer placed right before joining, we would need to change the DENSE_RANK() to rank orders by order_date decreasing
+
+CTE Result
+
+| customer_id | join_date  | product_id | order_date | ranking |
+| ----------- | ---------- | ---------- | ---------- | ------- |
+| A           | 2021-01-07 | 1          | 2021-01-01 | 1       |
+| A           | 2021-01-07 | 2          | 2021-01-01 | 1       |
+| B           | 2021-01-09 | 1          | 2021-01-04 | 1       |
+| B           | 2021-01-09 | 2          | 2021-01-02 | 2       |
+| B           | 2021-01-09 | 2          | 2021-01-01 | 3       |
+
+Final Result
+
+| customer_id | join_date  | product_id | order_date | ranking |
+| ----------- | ---------- | ---------- | ---------- | ------- |
+| A           | 2021-01-07 | 1          | 2021-01-01 | 1       |
+| A           | 2021-01-07 | 2          | 2021-01-01 | 1       |
+| B           | 2021-01-09 | 1          | 2021-01-04 | 1       |
+
+---
+
+## ⭐ Question 8 - What is the total items and amount spent for each member before they became a member?
+
+```
+
+SELECT s.customer_id, COUNT(*) as total_items, SUM(m.price) as total_spent
+FROM sales s
+INNER JOIN members mem ON s.customer_id = mem.customer_id AND s.order_date < mem.join_date
+INNER JOIN menu m ON s.product_id = m.product_id
+GROUP BY s.customer_id
+ORDER BY s.customer_id ASC
+
+```
+
+Explanation
+- Used COUNT and SUM aggregate functions to find total items and sum of those items
+- Inner Joined members table on customer id and order dates less than the member's join date
+- Inner joined menu to allow calculation of menu items
+- Grouped by customer id
+
+Result
+
+| customer_id | total_items | total_spent |
+| ----------- | ----------- | ----------- |
+| A           | 2           | 25          |
+| B           | 3           | 40          |
+
+---
+
+## ⭐ Question 9 - If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
+
+```
+
+WITH cte_table AS(
+  SELECT s.customer_id, m.product_name, 
+  CASE
+      WHEN m.product_name = 'sushi' THEN m.price * 20
+      ELSE m.price * 10
+  END AS points
+  FROM sales s
+  INNER JOIN menu m ON s.product_id = m.product_id
+  ORDER BY s.customer_id
+)
+SELECT customer_id, SUM(points)
+FROM cte_table
+GROUP BY customer_id
+ORDER BY customer_id
+
+```
+
+Explanation
+- Created a CTE coupled with a switch case statement to calculate the points for each product
+- Used the SUM() aggregate function on the CTE to calculate the total points
+
+CTE Result
+
+| customer_id | product_name | points |
+| ----------- | ------------ | ------ |
+| A           | curry        | 150    |
+| A           | ramen        | 120    |
+| A           | ramen        | 120    |
+| A           | ramen        | 120    |
+| A           | sushi        | 200    |
+| A           | curry        | 150    |
+| B           | sushi        | 200    |
+| B           | sushi        | 200    |
+| B           | curry        | 150    |
+| B           | curry        | 150    |
+| B           | ramen        | 120    |
+| B           | ramen        | 120    |
+| C           | ramen        | 120    |
+| C           | ramen        | 120    |
+| C           | ramen        | 120    |
+
+Final Result
+
+| customer_id | sum |
+| ----------- | --- |
+| A           | 860 |
+| B           | 940 |
+| C           | 360 |
+
+
+## ⭐ Question 10 - In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
+
+```
+
+WITH cte_table AS(
+	SELECT *
+  FROM sales s
+  INNER JOIN members m ON s.customer_id = m.customer_id AND s.order_date BETWEEN m.join_date AND m.join_date + 14
+)
+
+SELECT * FROM cte_table
+
+```
