@@ -372,11 +372,47 @@ Final Result
 ```
 
 WITH cte_table AS(
-	SELECT *
+  SELECT s.customer_id, s.order_date, s.product_id, m.join_date, me.product_name, me.price,
+  CASE
+  	WHEN s.order_date BETWEEN m.join_date AND m.join_date + 6 THEN me.price * 20
+  	WHEN me.product_name = 'sushi' THEN me.price * 20
+  	ELSE me.price * 10
+  END as points
   FROM sales s
-  INNER JOIN members m ON s.customer_id = m.customer_id AND s.order_date BETWEEN m.join_date AND m.join_date + 14
+  INNER JOIN members m ON s.customer_id = m.customer_id AND s.order_date >= m.join_date
+  INNER JOIN menu me ON s.product_id = me.product_id
+  WHERE s.order_date < CAST('2/1/2021' AS DATE)
+  ORDER BY s.customer_id ASC, s.order_date ASC
 )
-
-SELECT * FROM cte_table
+SELECT customer_id, SUM(points) as total_points
+FROM cte_table
+GROUP BY customer_id
+ORDER BY customer_id ASC
 
 ```
+
+Explanation
+- Created CTE to calculate points based on product name and join date
+- Outside Select statement to sum all points based on customer id
+
+CTE Result
+
+| customer_id | order_date | product_id | join_date  | product_name | price | points |
+| ----------- | ---------- | ---------- | ---------- | ------------ | ----- | ------ |
+| A           | 2021-01-07 | 2          | 2021-01-07 | curry        | 15    | 300    |
+| A           | 2021-01-10 | 3          | 2021-01-07 | ramen        | 12    | 240    |
+| A           | 2021-01-11 | 3          | 2021-01-07 | ramen        | 12    | 240    |
+| A           | 2021-01-11 | 3          | 2021-01-07 | ramen        | 12    | 240    |
+| B           | 2021-01-11 | 1          | 2021-01-09 | sushi        | 10    | 200    |
+| B           | 2021-01-16 | 3          | 2021-01-09 | ramen        | 12    | 120    |
+
+Final Result
+
+| customer_id | total_points |
+| ----------- | ------------ |
+| A           | 1020         |
+| B           | 320          |
+
+---
+
+
