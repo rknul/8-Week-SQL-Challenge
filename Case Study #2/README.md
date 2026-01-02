@@ -1,4 +1,4 @@
-# Case Study #1 - Danny's Diner
+# Case Study #2 - Pizza Runner
 
 <img width="400" height="400" alt="image" src="https://github.com/user-attachments/assets/4395854e-be1d-49fe-ba5a-f1eb87dc5426" />
 
