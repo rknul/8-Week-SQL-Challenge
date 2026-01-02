@@ -21,33 +21,45 @@ Danny wants us to clean the data and apply some basic calculations so he can giv
 ## Pizza Metrics
 
 ### ⭐ Question 1 - How many pizzas were ordered?
+```
+
+    SELECT COUNT(order_time) as pizzas_ordered
+    FROM customer_orders
 
 ```
 
-
-
-```
+---
 
 Explanation
+- Simple aggregate use to count how many pizzas were ordered
 
 Result
 
+| pizzas_ordered |
+| -------------- |
+| 14             |
 
 ---
 
 ### ⭐ Question 2 - How many unique customer orders were made?
 
 ```
-
-
+SELECT COUNT(*)
+FROM(
+	SELECT DISTINCT pizza_id, exclusions, extras
+  FROM customer_orders
+) as unique_pizza_orders
 
 ```
 
 Explanation
+- Counted all rows of subquery which found all unique pizza orders
 
 
 Result
-
+| count |
+| --- |
+| 10 |
 
 ---
 
@@ -55,15 +67,29 @@ Result
 
 ```
 
+SELECT COUNT(*)
+FROM(
+  SELECT order_id, cancellation,
+  CASE
+      WHEN cancellation IS NULL THEN ''
+      WHEN cancellation = 'null' THEN ''
+      ELSE cancellation
+  END as cancellation_clean
+  FROM runner_orders
+) as clean_table
+WHERE cancellation_clean = ''
 
 ```
 
 Explanation
-
+- Similar to Question 2, created a subquery to clean nulls
+- Outside query uses Count() function to count all orders that don't have cancellation reason
 
 Final Result
 
-
+| count |
+| --- |
+| 8 |
 
 ---
 
