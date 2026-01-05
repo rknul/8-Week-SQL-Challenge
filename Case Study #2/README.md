@@ -68,22 +68,13 @@ Result
 ```
 
 SELECT COUNT(*)
-FROM(
-  SELECT order_id, cancellation,
-  CASE
-      WHEN cancellation IS NULL THEN ''
-      WHEN cancellation = 'null' THEN ''
-      ELSE cancellation
-  END as cancellation_clean
-  FROM runner_orders
-) as clean_table
-WHERE cancellation_clean = ''
+FROM runner_orders
+WHERE duration != 'null'
 
 ```
 
 Explanation
-- Similar to Question 2, created a subquery to clean nulls
-- Outside query uses Count() function to count all orders that don't have cancellation reason
+- Since column 'duration' is how long it took to deliver the pizza, I simply counted how many rows where duration was not equal to null
 
 Final Result
 
@@ -97,19 +88,24 @@ Final Result
 
 ```
 
-
+SELECT pizza_id, COUNT(pizza_id)
+FROM customer_orders c
+INNER JOIN runner_orders r ON c.order_id = r.order_id
+WHERE r.duration != 'null'
+GROUP BY pizza_id
+ORDER BY pizza_id ASC
 
 ```
 Explanation
+- Joined runner_orders table to customer_orders and set the condition to successfully delivered orders by filtering out duration != null
+- Used COUNT() aggregate function to count how many pizzas were delivered of each type
 
+Result
 
-CTE Result
-
-
-
-Final Result
-
-
+| pizza_id | count |
+| -------- | ----- |
+| 1        | 9     |
+| 2        | 3     |
 
 ---
 
@@ -117,17 +113,27 @@ Final Result
 
 ```
 
-
+    SELECT customer_id, pizza_id, COUNT(*) as pizzas_ordered
+    FROM customer_orders
+    GROUP BY customer_id, pizza_id
+    ORDER BY customer_id ASC, pizza_id ASC
 
 ```
 Explanation
+- Used COUNT() aggregate function and grouped by customer_id and pizza_id
 
+Result
 
-CTE Result
-
-
-Final Result
-
+| customer_id | pizza_id | pizzas_ordered |
+| ----------- | -------- | -------------- |
+| 101         | 1        | 2              |
+| 101         | 2        | 1              |
+| 102         | 1        | 2              |
+| 102         | 2        | 1              |
+| 103         | 1        | 3              |
+| 103         | 2        | 1              |
+| 104         | 1        | 3              |
+| 105         | 2        | 1              |
 
 ---
 
@@ -135,20 +141,27 @@ Final Result
 
 ```
 
+SELECT c.order_id, COUNT(*) as pizzas_delivered
+FROM customer_orders c
+INNER JOIN runner_orders r ON c.order_id = r.order_id
+WHERE r.duration != 'null'
+GROUP BY c.order_id
+ORDER BY pizzas_delivered DESC
+LIMIT 1
 
 
 ```
 
 Explanation
+- Joined runner_orders and customer_orders and filtered which were delivered
+- Grouped by order_id and counted how many pizzas were delivered by each group
+- Ordered Count in descending order and limited it to 1 row
 
+Result
 
-CTE Result
-
-
-
-Final Result
-
-
+| order_id | pizzas_delivered |
+| -------- | ----- |
+| 4        | 3     |
 
 ---
 
